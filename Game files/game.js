@@ -8,7 +8,7 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 
 function compareVersions(a, b) {
@@ -3201,21 +3201,18 @@ function onAllSlotsStopped(rawResults, displayResults, bet) {
     awardAarons(payout, true);
     const net = payout - bet;
     statusEl.textContent = (net >= 0 ? '+' : '') + fmt(net) + ' aarons';
-    if (slotsWinStreak === 4) {
-      setTimeout(() => showCaptchaPopup('Winning is hard. sometimes take a break.'), 600);
-    }
   } else {
     slotsWinStreak = 0;
     slotsLossStreak++;
     state.minigames.slotsStreak = 0;
     statusEl.textContent = '-' + fmt(bet) + ' aarons';
-    save();
-    if (slotsLossStreak === 3) {
-      setTimeout(showBadLuckPopup, 600);
-    } else if (slotsLossStreak >= 5) {
-      slotsLossStreak = 0;
-      setTimeout(() => showAdPopup(bet), 600);
+    if (slotsLossStreak === 3 && !state.achievements['bad-luck']) {
+      state.achievements['bad-luck'] = true;
+      const a = ACHIEVEMENTS.find(x => x.id === 'bad-luck');
+      if (a) showAchievementToast(a);
+      updateAchievementCards();
     }
+    save();
   }
 
   streakEl.textContent = 'streak ' + slotsWinStreak;

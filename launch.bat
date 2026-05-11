@@ -1,14 +1,14 @@
 @echo off
 setlocal EnableExtensions
 
-set "APP_VERSION=1.0.0"
+set "APP_VERSION=1.0.1"
 set "UPDATE_MANIFEST_URL=https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json"
 set "APP_FILE=%~dp0Game files\index.html"
 set "APP_URL="
 set "BROWSER="
 
 if defined UPDATE_MANIFEST_URL (
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0updater.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%"
+  powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0updater.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" >nul 2>nul
 )
 
 for /f "usebackq delims=" %%U in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = (Resolve-Path -LiteralPath $env:APP_FILE).Path; [System.Uri]::new($p).AbsoluteUri"`) do set "APP_URL=%%U"
