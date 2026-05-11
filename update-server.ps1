@@ -86,6 +86,18 @@ function Invoke-UpdateAndRelaunch {
   }
 }
 
+function Get-ManifestJson {
+  try {
+    $manifest = Invoke-RestMethod -Uri ($ManifestUrl + '?t=' + [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) -UseBasicParsing
+    return (@{
+      version = [string]$manifest.version
+      zipUrl = [string]$manifest.zipUrl
+    } | ConvertTo-Json -Compress)
+  } catch {
+    return '{"ok":false}'
+  }
+}
+
 if (-not $Serve) {
   Start-DetachedServer
   exit 0
@@ -130,6 +142,8 @@ try {
         Send-HttpResponse -Client $client -StatusCode 204 -StatusText 'No Content' -Body ''
       } elseif ($method -eq 'GET' -and $path -like '/status*') {
         Send-HttpResponse -Client $client -StatusCode 200 -StatusText 'OK' -Body '{"ok":true}'
+      } elseif ($method -eq 'GET' -and $path -like '/manifest*') {
+        Send-HttpResponse -Client $client -StatusCode 200 -StatusText 'OK' -Body (Get-ManifestJson)
       } elseif ($method -eq 'POST' -and $path -like '/update*') {
         Send-HttpResponse -Client $client -StatusCode 202 -StatusText 'Accepted' -Body '{"ok":true,"updating":true}'
         $client.Close()

@@ -8,9 +8,10 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.2.4';
+const APP_VERSION = '1.2.5';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
+let updateStatusText = '';
 
 function compareVersions(a, b) {
   const left = String(a || '').split('.').map(n => parseInt(n, 10) || 0);
@@ -60,11 +61,14 @@ function requestAutoUpdate(latestVersion, bodyEl, buttonEl, laterBtn) {
   });
 }
 
+function setUpdateStatus(text) {
+  updateStatusText = text || '';
+  if (appVersionEl) {
+    appVersionEl.textContent = 'version ' + APP_VERSION + (updateStatusText ? ' | ' + updateStatusText : '');
+  }
+}
+
 function showUpdateAvailableBanner(latestVersion) {
-  const dismissedKey = 'aaronclicker_update_dismissed_' + latestVersion;
-  try {
-    if (localStorage.getItem(dismissedKey) === '1') return;
-  } catch (e) {}
   if (document.getElementById('zip-update-banner')) return;
 
   const banner = document.createElement('div');
@@ -96,9 +100,6 @@ function showUpdateAvailableBanner(latestVersion) {
   laterBtn.id = 'zip-update-later';
   laterBtn.textContent = 'LATER';
   laterBtn.addEventListener('click', () => {
-    try {
-      localStorage.setItem(dismissedKey, '1');
-    } catch (e) {}
     banner.remove();
   });
 
@@ -110,15 +111,32 @@ function showUpdateAvailableBanner(latestVersion) {
 
 function checkForUpdateBanner() {
   if (DEV_MODE || !UPDATE_MANIFEST_URL) return;
-  fetch(UPDATE_MANIFEST_URL + '?t=' + Date.now(), { cache: 'no-store' })
-    .then(res => res.ok ? res.json() : null)
+  const stamp = Date.now();
+  const urls = [
+    UPDATE_MANIFEST_URL + '?t=' + stamp,
+    UPDATE_HELPER_URL + '/manifest?t=' + stamp,
+  ];
+
+  urls.reduce((chain, url) => {
+    return chain.catch(() => fetch(url, { cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error('update check failed');
+        return res.json();
+      })
+      .then(manifest => {
+        if (!manifest || !manifest.version) throw new Error('missing update version');
+        return manifest;
+      }));
+  }, Promise.reject())
     .then(manifest => {
-      if (!manifest || !manifest.version) return;
       if (compareVersions(manifest.version, APP_VERSION) > 0) {
+        setUpdateStatus('update ' + manifest.version + ' ready');
         showUpdateAvailableBanner(manifest.version);
+      } else {
+        setUpdateStatus('latest');
       }
     })
-    .catch(() => {});
+    .catch(() => setUpdateStatus('update check failed'));
 }
 
 function drawFallbackAaron(canvas) {
@@ -2032,7 +2050,7 @@ function updateStats() {
   const clickValue = manualClickValue();
   aaronCountEl.textContent = fmt(state.aarons) + (inDiddyMode ? ' Diddys' : ' Aarons');
   aaronRateEl.textContent  = fmt(state.aps)    + ' aarons/sec';
-  if (appVersionEl) appVersionEl.textContent = 'version ' + APP_VERSION;
+  if (appVersionEl) appVersionEl.textContent = 'version ' + APP_VERSION + (updateStatusText ? ' | ' + updateStatusText : '');
   manualRateEl.textContent = '+' + fmt(clickValue) + ' aaron' + (clickValue === 1 ? '' : 's') + ' / click';
   scheduleAchievementCheck();
 }
