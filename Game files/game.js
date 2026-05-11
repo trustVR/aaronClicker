@@ -8,13 +8,24 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '0.0.0';
-const ZIP_UPDATE_DISMISSED_KEY = 'aaronclicker_zipupdate_dismissed_' + APP_VERSION;
+const APP_VERSION = '1.0.0';
+const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 
-function showZipInstallUpdateBanner() {
-  if (DEV_MODE || window.location.protocol !== 'file:') return;
+function compareVersions(a, b) {
+  const left = String(a || '').split('.').map(n => parseInt(n, 10) || 0);
+  const right = String(b || '').split('.').map(n => parseInt(n, 10) || 0);
+  const len = Math.max(left.length, right.length);
+  for (let i = 0; i < len; i++) {
+    if ((left[i] || 0) > (right[i] || 0)) return 1;
+    if ((left[i] || 0) < (right[i] || 0)) return -1;
+  }
+  return 0;
+}
+
+function showUpdateAvailableBanner(latestVersion) {
+  const dismissedKey = 'aaronclicker_update_dismissed_' + latestVersion;
   try {
-    if (localStorage.getItem(ZIP_UPDATE_DISMISSED_KEY) === '1') return;
+    if (localStorage.getItem(dismissedKey) === '1') return;
   } catch (e) {}
   if (document.getElementById('zip-update-banner')) return;
 
@@ -26,11 +37,11 @@ function showZipInstallUpdateBanner() {
 
   const title = document.createElement('div');
   title.id = 'zip-update-title';
-  title.textContent = 'ZIP VERSION';
+  title.textContent = 'UPDATE AVAILABLE';
 
   const body = document.createElement('div');
   body.id = 'zip-update-body';
-  body.textContent = 'Close the game and run launch.bat to auto update before playing.';
+  body.textContent = 'Version ' + latestVersion + ' is ready. Close the game and run launch.bat to update.';
 
   const actions = document.createElement('div');
   actions.id = 'zip-update-actions';
@@ -41,7 +52,7 @@ function showZipInstallUpdateBanner() {
   closeBtn.textContent = 'OK';
   closeBtn.addEventListener('click', () => {
     try {
-      localStorage.setItem(ZIP_UPDATE_DISMISSED_KEY, '1');
+      localStorage.setItem(dismissedKey, '1');
     } catch (e) {}
     banner.remove();
   });
@@ -50,6 +61,19 @@ function showZipInstallUpdateBanner() {
   actions.append(closeBtn);
   banner.append(copy, actions);
   document.body.appendChild(banner);
+}
+
+function checkForUpdateBanner() {
+  if (DEV_MODE || !UPDATE_MANIFEST_URL) return;
+  fetch(UPDATE_MANIFEST_URL + '?t=' + Date.now(), { cache: 'no-store' })
+    .then(res => res.ok ? res.json() : null)
+    .then(manifest => {
+      if (!manifest || !manifest.version) return;
+      if (compareVersions(manifest.version, APP_VERSION) > 0) {
+        showUpdateAvailableBanner(manifest.version);
+      }
+    })
+    .catch(() => {});
 }
 
 function drawFallbackAaron(canvas) {
@@ -3506,7 +3530,8 @@ updateAchievementCards();
 updateCheatBtnVisibility();
 checkAchievements(true);
 createDevToolsPanel();
-showZipInstallUpdateBanner();
+checkForUpdateBanner();
+setInterval(checkForUpdateBanner, 10 * 60 * 1000);
 startFootlongMusicIfAllAchievements();
 
 // bulk buy button wiring
