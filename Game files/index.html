@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="application-name" content="Aaron Clicker" />
+  <meta name="theme-color" content="#0b0a09" />
+  <title>Aaron Clicker</title>
+  <link rel="icon" href="Aaron_match_pictures/Clicker.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game">
+
+    <!-- TOP STATS BAR -->
+    <div id="stats">
+      <div id="aaron-count">0 Aarons</div>
+      <div id="aaron-rate">0 aarons/sec</div>
+      <button id="mute-btn" title="Toggle sound effects">[ SFX ]</button>
+      <button id="music-btn" title="Toggle background music">[ MUS ]</button>
+    </div>
+
+    <!-- LEFT PANEL: Aaron clicker -->
+    <div id="left-panel">
+      <div id="clicker-label">Aaron</div>
+      <div id="clicker-wrapper">
+        <div id="sway-wrapper">
+          <img id="aaron-img" src="Aaron_match_pictures/Clicker.png" alt="Aaron" draggable="false"
+               onerror="this.style.display='none'; document.getElementById('aaron-fallback').style.display='block';" />
+          <canvas id="aaron-fallback" style="display:none;"></canvas>
+          <div id="click-flash"></div>
+        </div>
+        <div id="orbit-container"></div>
+      </div>
+      <div id="click-hint">click him</div>
+      <div id="manual-rate">+1 aaron / click</div>
+    </div>
+
+    <!-- RIGHT PANEL: Upgrades, Achievements, Minigames -->
+    <div id="right-panel">
+      <div class="panel-title-row">
+        <div id="panel-tabs">
+          <button class="panel-tab active" data-tab="upgrades">UPGRADES</button>
+          <button class="panel-tab" data-tab="achievements">ACHIEVEMENTS</button>
+          <button class="panel-tab" data-tab="minigames">MINIGAMES</button>
+        </div>
+        <div id="bulk-btns">
+          <button class="bulk-btn active" data-bulk="1">x1</button>
+          <button class="bulk-btn" data-bulk="5">x5</button>
+          <button class="bulk-btn" data-bulk="10">x10</button>
+          <button class="bulk-btn" data-bulk="15">x15</button>
+        </div>
+      </div>
+      <div id="upgrade-list" class="panel-view active"></div>
+      <div id="achievement-panel" class="panel-view">
+        <div id="achievement-summary">0 / 0 unlocked</div>
+        <div id="achievement-list"></div>
+      </div>
+      <div id="minigame-panel" class="panel-view">
+        <div class="minigame-card" id="follow-card">
+          <div class="minigame-title">FOLLOW AARON</div>
+          <div class="minigame-meta">
+            <span id="follow-status">keep your cursor on Aaron!</span>
+            <span id="follow-timer">15s</span>
+          </div>
+          <canvas id="follow-canvas" width="580" height="200"></canvas>
+          <button id="follow-start" class="minigame-btn">&#9654; START</button>
+          <div class="slots-odds-row">stay on Aaron to earn &nbsp;|&nbsp; lose him and you lose aarons</div>
+        </div>
+
+        <div class="minigame-card">
+          <div class="minigame-title">AARON WHACK</div>
+          <div class="minigame-meta">
+            <span id="whack-score">score 0</span>
+            <span id="whack-time">ready</span>
+          </div>
+          <div id="whack-field"></div>
+          <button id="whack-start" class="minigame-btn">START</button>
+        </div>
+
+        <div class="minigame-card">
+          <div class="minigame-title">AARON MATCH</div>
+          <div class="minigame-meta">
+            <span id="match-status">find the pairs</span>
+            <span id="match-reward">reward 0</span>
+          </div>
+          <div id="match-board"></div>
+          <button id="match-new" class="minigame-btn">NEW BOARD</button>
+        </div>
+
+        <div class="minigame-card" id="slots-card">
+          <div class="minigame-title">AARON SLOTS</div>
+          <div class="minigame-meta">
+            <span id="slots-status">place your bet</span>
+            <span id="slots-streak">streak 0</span>
+          </div>
+          <div id="slots-machine">
+            <div class="slot-column" id="slot-col-0">
+              <div class="slot-window"><div class="slot-strip" id="slot-strip-0"></div></div>
+            </div>
+            <div class="slot-column" id="slot-col-1">
+              <div class="slot-window"><div class="slot-strip" id="slot-strip-1"></div></div>
+            </div>
+            <div class="slot-column" id="slot-col-2">
+              <div class="slot-window"><div class="slot-strip" id="slot-strip-2"></div></div>
+            </div>
+            <div id="slots-payline-bar">
+              <span class="slots-payline-arrow">&#9654;</span>
+              <span class="slots-payline-arrow">&#9664;</span>
+            </div>
+          </div>
+          <div id="slots-bet-row">
+            <input id="slots-bet" type="number" min="1" value="10" />
+            <button class="slots-pct-btn" data-pct="10">10%</button>
+            <button class="slots-pct-btn" data-pct="50">50%</button>
+            <button class="slots-pct-btn" data-pct="100">MAX</button>
+          </div>
+          <button id="slots-spin" class="minigame-btn">&#9654; SPIN</button>
+          <div class="slots-odds-row">3 match: &#215;10 &nbsp;|&nbsp; 2 match: &#215;3</div>
+        </div>
+
+        <div class="minigame-card" id="plane-card">
+          <div class="minigame-title">AARON AIR</div>
+          <div class="minigame-meta">
+            <span id="plane-status">place your bet and fly</span>
+          </div>
+          <canvas id="plane-canvas" width="580" height="300"></canvas>
+          <div id="plane-bet-row">
+            <input id="plane-bet" type="number" min="1" value="10" />
+            <button class="slots-pct-btn" data-plane-pct="10">10%</button>
+            <button class="slots-pct-btn" data-plane-pct="50">50%</button>
+            <button class="slots-pct-btn" data-plane-pct="100">ALL</button>
+          </div>
+          <button id="plane-start" class="minigame-btn">&#9992; FLY</button>
+          <div class="slots-odds-row">runway: +100% &nbsp;|&nbsp; fire: -100% &nbsp;|&nbsp; green circle = safe, red = danger!</div>
+        </div>
+
+        <div class="minigame-card" id="road-card">
+          <div class="minigame-title">AARON CROSS</div>
+          <div class="minigame-meta">
+            <span id="road-status">click a tile to hop forward</span>
+            <span id="road-pot">pot: 0</span>
+          </div>
+          <div id="road-field"></div>
+          <div id="road-btn-row">
+            <button id="road-cashout" class="minigame-btn" disabled>CASH OUT</button>
+            <button id="road-reset" class="minigame-btn">RESET</button>
+          </div>
+          <div class="slots-odds-row">hop forward to grow your pot &nbsp;|&nbsp; dodge the fat guy!</div>
+        </div>
+
+        <div class="minigame-card" id="crates-card">
+          <div class="minigame-title">CRATE SMASH</div>
+          <div class="minigame-meta">
+            <span id="crates-status">smash a crate!</span>
+            <span id="crates-pot">+0 aarons</span>
+          </div>
+          <div id="crates-grid"></div>
+          <div id="crates-btn-row">
+            <button id="crates-cashout" class="minigame-btn" disabled>CASH OUT</button>
+            <button id="crates-newround" class="minigame-btn">NEW ROUND</button>
+          </div>
+          <div class="slots-odds-row">aaron: +5% of balance &nbsp;|&nbsp; bomb: -20% of balance!</div>
+        </div>
+
+        <div class="minigame-card" id="cards-pack-card">
+          <div class="minigame-title">AARON CARDS</div>
+          <div class="minigame-meta">
+            <span id="cards-pack-status">cost: — aarons</span>
+            <span id="cards-pack-count">0 / 13</span>
+          </div>
+          <div id="cards-open-area">
+            <div id="cards-flip-wrap">
+              <div id="cards-flip-inner">
+                <div id="cards-flip-back">&#9733; AARON &#9733;</div>
+                <div id="cards-flip-front" style="display:none;"></div>
+              </div>
+            </div>
+          </div>
+          <button id="cards-open-btn" class="minigame-btn">OPEN PACK</button>
+          <div id="cards-collection"></div>
+          <div class="slots-odds-row">higher number = rarer &nbsp;|&nbsp; you only get the card, no aarons back</div>
+        </div>
+
+        <div id="cheat-btn-wrap">
+          <button id="activate-cheats-btn">ACTIVATE CHEATS</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
