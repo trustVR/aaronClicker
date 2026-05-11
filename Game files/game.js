@@ -8,7 +8,7 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.0.5';
+const APP_VERSION = '1.2.0';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 
@@ -1491,6 +1491,7 @@ UPGRADES.forEach(u => {
 // ── DOM REFS ──────────────────────────────────────────────────────────────────
 const aaronCountEl   = document.getElementById('aaron-count');
 const aaronRateEl    = document.getElementById('aaron-rate');
+const appVersionEl   = document.getElementById('app-version');
 const manualRateEl   = document.getElementById('manual-rate');
 const upgradeList    = document.getElementById('upgrade-list');
 const achievementSummary = document.getElementById('achievement-summary');
@@ -2023,6 +2024,7 @@ function updateStats() {
   const clickValue = manualClickValue();
   aaronCountEl.textContent = fmt(state.aarons) + (inDiddyMode ? ' Diddys' : ' Aarons');
   aaronRateEl.textContent  = fmt(state.aps)    + ' aarons/sec';
+  if (appVersionEl) appVersionEl.textContent = 'version ' + APP_VERSION;
   manualRateEl.textContent = '+' + fmt(clickValue) + ' aaron' + (clickValue === 1 ? '' : 's') + ' / click';
   scheduleAchievementCheck();
 }
