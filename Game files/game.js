@@ -8,8 +8,8 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.2.12';
-const UPDATE_MANIFEST_URL = 'https://api.github.com/repos/trustVR/aaronClicker/contents/update-manifest.json?ref=main';
+const APP_VERSION = '1.2.13';
+const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 let updateStatusText = '';
 
