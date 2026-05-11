@@ -8,7 +8,7 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 
@@ -24,6 +24,13 @@ function compareVersions(a, b) {
 }
 
 function requestAutoUpdate(latestVersion, bodyEl, buttonEl, laterBtn) {
+  if (buttonEl && buttonEl.dataset.fallbackLauncher === '1') {
+    try {
+      window.location.href = new URL('../launch.bat', window.location.href).href;
+    } catch (e) {}
+    return;
+  }
+
   if (buttonEl) {
     buttonEl.disabled = true;
     buttonEl.textContent = 'UPDATING...';
@@ -45,10 +52,11 @@ function requestAutoUpdate(latestVersion, bodyEl, buttonEl, laterBtn) {
   }).catch(() => {
     if (buttonEl) {
       buttonEl.disabled = false;
-      buttonEl.textContent = 'UPDATE NOW';
+      buttonEl.textContent = 'OPEN LAUNCHER';
+      buttonEl.dataset.fallbackLauncher = '1';
     }
     if (laterBtn) laterBtn.disabled = false;
-    if (bodyEl) bodyEl.textContent = 'The update helper is not running. Close the game and run launch.bat to update.';
+    if (bodyEl) bodyEl.textContent = 'The update helper is not running. Click OPEN LAUNCHER, or close this window and run launch.bat from the game folder.';
   });
 }
 
