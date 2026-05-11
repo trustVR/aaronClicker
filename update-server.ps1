@@ -22,6 +22,7 @@ function Start-DetachedServer {
   }
 
   $scriptPath = $PSCommandPath
+  $resolvedAppRoot = (Resolve-Path -LiteralPath $AppRoot).Path.TrimEnd('\')
   $args = @(
     '-NoProfile',
     '-NonInteractive',
@@ -30,7 +31,7 @@ function Start-DetachedServer {
     '-File',
     (Quote-Arg $scriptPath),
     '-AppRoot',
-    (Quote-Arg $AppRoot),
+    (Quote-Arg $resolvedAppRoot),
     '-CurrentVersion',
     (Quote-Arg $CurrentVersion),
     '-ManifestUrl',
@@ -44,11 +45,30 @@ function Start-DetachedServer {
 }
 
 function Test-HelperStatus {
+  $client = $null
   try {
-    $response = Invoke-RestMethod -Uri ("http://127.0.0.1:$Port/status") -UseBasicParsing -TimeoutSec 1
-    return [bool]$response.ok
+    $client = [System.Net.Sockets.TcpClient]::new()
+    $connect = $client.BeginConnect('127.0.0.1', $Port, $null, $null)
+    if (-not $connect.AsyncWaitHandle.WaitOne(750)) {
+      return $false
+    }
+    $client.EndConnect($connect)
+    $client.ReceiveTimeout = 1000
+    $client.SendTimeout = 1000
+
+    $request = "GET /status HTTP/1.1`r`nHost: 127.0.0.1:$Port`r`nConnection: close`r`n`r`n"
+    $bytes = [System.Text.Encoding]::ASCII.GetBytes($request)
+    $stream = $client.GetStream()
+    $stream.Write($bytes, 0, $bytes.Length)
+    $stream.Flush()
+
+    $reader = [System.IO.StreamReader]::new($stream, [System.Text.Encoding]::UTF8)
+    $response = $reader.ReadToEnd()
+    return ($response -like '*"ok":true*')
   } catch {
     return $false
+  } finally {
+    if ($client) { $client.Close() }
   }
 }
 

@@ -1,16 +1,18 @@
 @echo off
 setlocal EnableExtensions
 
-set "APP_VERSION=1.2.9"
+set "APP_VERSION=1.2.11"
 set "UPDATE_MANIFEST_URL=https://api.github.com/repos/trustVR/aaronClicker/contents/update-manifest.json?ref=main"
 set "UPDATE_HELPER_PORT=18172"
+set "APP_ROOT=%~dp0"
+if "%APP_ROOT:~-1%"=="\" set "APP_ROOT=%APP_ROOT:~0,-1%"
 set "APP_FILE=%~dp0Game files\index.html"
 set "APP_URL="
 set "BROWSER="
 
 if defined UPDATE_MANIFEST_URL (
-  powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0updater.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" >nul 2>nul
-  powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0update-server.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" -Port "%UPDATE_HELPER_PORT%" >nul 2>nul
+  powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0updater.ps1" -AppRoot "%APP_ROOT%" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" >nul 2>nul
+  call :start_update_helper
 )
 
 for /f "usebackq delims=" %%U in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = (Resolve-Path -LiteralPath $env:APP_FILE).Path; [System.Uri]::new($p).AbsoluteUri"`) do set "APP_URL=%%U"
@@ -37,3 +39,10 @@ if defined BROWSER (
 )
 
 endlocal
+exit /b 0
+
+:start_update_helper
+powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0update-server.ps1" -AppRoot "%APP_ROOT%" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" -Port "%UPDATE_HELPER_PORT%" >nul 2>nul
+timeout /t 1 /nobreak >nul 2>nul
+powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0update-server.ps1" -AppRoot "%APP_ROOT%" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" -Port "%UPDATE_HELPER_PORT%" >nul 2>nul
+exit /b 0
