@@ -43,6 +43,31 @@ function Start-DetachedServer {
   Start-Process -FilePath 'powershell.exe' -ArgumentList $args -WindowStyle Hidden | Out-Null
 }
 
+function Test-HelperStatus {
+  try {
+    $response = Invoke-RestMethod -Uri ("http://127.0.0.1:$Port/status") -UseBasicParsing -TimeoutSec 1
+    return [bool]$response.ok
+  } catch {
+    return $false
+  }
+}
+
+function Start-AndVerifyServer {
+  if (Test-HelperStatus) {
+    return
+  }
+
+  for ($attempt = 0; $attempt -lt 2; $attempt++) {
+    Start-DetachedServer
+    for ($i = 0; $i -lt 12; $i++) {
+      Start-Sleep -Milliseconds 250
+      if (Test-HelperStatus) {
+        return
+      }
+    }
+  }
+}
+
 function Send-HttpResponse {
   param(
     [System.Net.Sockets.TcpClient]$Client,
@@ -104,7 +129,7 @@ function Get-ManifestJson {
 }
 
 if (-not $Serve) {
-  Start-DetachedServer
+  Start-AndVerifyServer
   exit 0
 }
 

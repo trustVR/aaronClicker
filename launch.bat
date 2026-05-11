@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 
-set "APP_VERSION=1.2.8"
+set "APP_VERSION=1.2.9"
 set "UPDATE_MANIFEST_URL=https://api.github.com/repos/trustVR/aaronClicker/contents/update-manifest.json?ref=main"
 set "UPDATE_HELPER_PORT=18172"
 set "APP_FILE=%~dp0Game files\index.html"
@@ -10,7 +10,7 @@ set "BROWSER="
 
 if defined UPDATE_MANIFEST_URL (
   powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0updater.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" >nul 2>nul
-  start "" powershell -NoProfile -WindowStyle Hidden -NonInteractive -ExecutionPolicy Bypass -File "%~dp0update-server.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" -Port "%UPDATE_HELPER_PORT%" -Serve
+  powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0update-server.ps1" -AppRoot "%~dp0" -CurrentVersion "%APP_VERSION%" -ManifestUrl "%UPDATE_MANIFEST_URL%" -Port "%UPDATE_HELPER_PORT%" >nul 2>nul
 )
 
 for /f "usebackq delims=" %%U in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$p = (Resolve-Path -LiteralPath $env:APP_FILE).Path; [System.Uri]::new($p).AbsoluteUri"`) do set "APP_URL=%%U"
