@@ -8,7 +8,7 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 
 function compareVersions(a, b) {
@@ -1769,6 +1769,7 @@ achievement('plane-fire-5',  'Pyromaniac Pilot', 'Land in fire 5 times on Aaron 
   ['dont-like-game', "I Don't Like This Game", 'Have over 1 trillion Aarons.', () => state.aarons >= 1e12, '????', "you'll know when you get there..."],
   ['bad-luck', 'Dang', 'Lose 3 slots in a row and accept it.', () => !!state.achievements['bad-luck'], '????', 'just keep spinning...'],
   ['typed-aaron', 'Aaron', 'Type "aaron" on your keyboard.', () => !!state.achievements['typed-aaron'], '????', 'try typing something...'],
+  ['typed-diddy', 'Diddy', 'Type "diddy" on your keyboard.', () => !!state.achievements['typed-diddy'], '????', 'try typing another name...'],
   ['passed-captcha', 'Not a Robot', 'Pass the CAPTCHA.', () => !!state.achievements['passed-captcha'], '????', 'are you a robot?'],
   ['broke-clicks',   'Window Shopping', 'Click an upgrade you cannot afford 5 times.', () => (state.minigames.brokeClicks || 0) >= 5, '????', 'try buying something you cant afford...'],
   ['follow-play-1',  'First Follower',  'Play Follow Aaron once.',              () => (state.minigames.followPlays   || 0) >= 1],
@@ -2282,8 +2283,12 @@ function triggerBirthday() {
   requestAnimationFrame(animateConfetti);
 }
 
-const AARON_SEQUENCE = ['a','a','r','o','n'];
-let aaronKeyBuffer = [];
+const TYPED_ACHIEVEMENT_SEQUENCES = [
+  { keys: ['a','a','r','o','n'], id: 'typed-aaron' },
+  { keys: ['d','i','d','d','y'], id: 'typed-diddy' },
+];
+const TYPED_ACHIEVEMENT_BUFFER_MAX = Math.max(...TYPED_ACHIEVEMENT_SEQUENCES.map(s => s.keys.length));
+let typedAchievementKeyBuffer = [];
 
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
@@ -2293,18 +2298,20 @@ document.addEventListener('keydown', (e) => {
 
   const key = e.key.toLowerCase();
   if (key.length === 1) {
-    aaronKeyBuffer.push(key);
-    if (aaronKeyBuffer.length > AARON_SEQUENCE.length) aaronKeyBuffer.shift();
-    if (aaronKeyBuffer.join('') === AARON_SEQUENCE.join('')) {
-      aaronKeyBuffer = [];
-      if (!state.achievements['typed-aaron']) {
-        state.achievements['typed-aaron'] = true;
-        const a = ACHIEVEMENTS.find(x => x.id === 'typed-aaron');
+    typedAchievementKeyBuffer.push(key);
+    if (typedAchievementKeyBuffer.length > TYPED_ACHIEVEMENT_BUFFER_MAX) typedAchievementKeyBuffer.shift();
+    TYPED_ACHIEVEMENT_SEQUENCES.forEach(sequence => {
+      const recentKeys = typedAchievementKeyBuffer.slice(-sequence.keys.length);
+      if (recentKeys.join('') === sequence.keys.join('')) {
+        typedAchievementKeyBuffer = [];
+        if (state.achievements[sequence.id]) return;
+        state.achievements[sequence.id] = true;
+        const a = ACHIEVEMENTS.find(x => x.id === sequence.id);
         if (a) showAchievementToast(a);
         updateAchievementCards();
         save();
       }
-    }
+    });
   }
 });
 
