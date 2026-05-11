@@ -8,8 +8,9 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
+const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 
 function compareVersions(a, b) {
   const left = String(a || '').split('.').map(n => parseInt(n, 10) || 0);
@@ -22,6 +23,35 @@ function compareVersions(a, b) {
   return 0;
 }
 
+function requestAutoUpdate(latestVersion, bodyEl, buttonEl, laterBtn) {
+  if (buttonEl) {
+    buttonEl.disabled = true;
+    buttonEl.textContent = 'UPDATING...';
+  }
+  if (laterBtn) laterBtn.disabled = true;
+  if (bodyEl) bodyEl.textContent = 'Installing version ' + latestVersion + '. The game will reopen when it is done.';
+
+  try { save(); } catch (e) {}
+
+  fetch(UPDATE_HELPER_URL + '/update', {
+    method: 'POST',
+    body: latestVersion,
+  }).then(() => {
+    setTimeout(() => {
+      try { window.open('', '_self'); } catch (e) {}
+      try { window.close(); } catch (e) {}
+      if (bodyEl) bodyEl.textContent = 'Update started. If this window stays open, close it and wait for the game to reopen.';
+    }, 500);
+  }).catch(() => {
+    if (buttonEl) {
+      buttonEl.disabled = false;
+      buttonEl.textContent = 'UPDATE NOW';
+    }
+    if (laterBtn) laterBtn.disabled = false;
+    if (bodyEl) bodyEl.textContent = 'The update helper is not running. Close the game and run launch.bat to update.';
+  });
+}
+
 function showUpdateAvailableBanner(latestVersion) {
   const dismissedKey = 'aaronclicker_update_dismissed_' + latestVersion;
   try {
@@ -31,6 +61,7 @@ function showUpdateAvailableBanner(latestVersion) {
 
   const banner = document.createElement('div');
   banner.id = 'zip-update-banner';
+  banner.className = 'updater-big';
 
   const copy = document.createElement('div');
   copy.id = 'zip-update-copy';
@@ -41,16 +72,22 @@ function showUpdateAvailableBanner(latestVersion) {
 
   const body = document.createElement('div');
   body.id = 'zip-update-body';
-  body.textContent = 'Version ' + latestVersion + ' is ready. Close the game and run launch.bat to update.';
+  body.textContent = 'Version ' + latestVersion + ' is ready. Update now to install it and reopen the game automatically.';
 
   const actions = document.createElement('div');
   actions.id = 'zip-update-actions';
 
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button';
-  closeBtn.id = 'zip-update-close';
-  closeBtn.textContent = 'OK';
-  closeBtn.addEventListener('click', () => {
+  const updateBtn = document.createElement('button');
+  updateBtn.type = 'button';
+  updateBtn.id = 'zip-update-now';
+  updateBtn.textContent = 'UPDATE NOW';
+  updateBtn.addEventListener('click', () => requestAutoUpdate(latestVersion, body, updateBtn, laterBtn));
+
+  const laterBtn = document.createElement('button');
+  laterBtn.type = 'button';
+  laterBtn.id = 'zip-update-later';
+  laterBtn.textContent = 'LATER';
+  laterBtn.addEventListener('click', () => {
     try {
       localStorage.setItem(dismissedKey, '1');
     } catch (e) {}
@@ -58,7 +95,7 @@ function showUpdateAvailableBanner(latestVersion) {
   });
 
   copy.append(title, body);
-  actions.append(closeBtn);
+  actions.append(updateBtn, laterBtn);
   banner.append(copy, actions);
   document.body.appendChild(banner);
 }
@@ -3535,7 +3572,7 @@ updateCheatBtnVisibility();
 checkAchievements(true);
 createDevToolsPanel();
 checkForUpdateBanner();
-setInterval(checkForUpdateBanner, 10 * 60 * 1000);
+setInterval(checkForUpdateBanner, 60 * 1000);
 startFootlongMusicIfAllAchievements();
 
 // bulk buy button wiring
