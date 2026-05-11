@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 
-set "APP_VERSION=1.0.4"
+set "APP_VERSION=1.0.5"
 set "UPDATE_MANIFEST_URL=https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json"
 set "UPDATE_HELPER_PORT=18172"
 set "APP_FILE=%~dp0Game files\index.html"

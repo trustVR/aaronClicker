@@ -8,7 +8,7 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.0.4';
+const APP_VERSION = '1.0.5';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 
@@ -1064,6 +1064,7 @@ const UPGRADES = [
     baseCost: 15,
     baseEps:  1,
     costMult: 1.15,
+    epsGrowth: 0.02,
   },
   {
     id:       'subway',
@@ -2135,7 +2136,8 @@ function recalcAps() {
   state.aps = 0;
   UPGRADES.forEach(u => {
     const owned = state.owned[u.id];
-    state.aps += u.baseEps * owned * (1 + owned * 0.01);
+    const epsGrowth = u.epsGrowth ?? 0.01;
+    state.aps += u.baseEps * owned * (1 + owned * epsGrowth);
   });
 }
 
