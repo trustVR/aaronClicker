@@ -8,8 +8,8 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.2.5';
-const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
+const APP_VERSION = '1.2.6';
+const UPDATE_MANIFEST_URL = 'https://api.github.com/repos/trustVR/aaronClicker/contents/update-manifest.json?ref=main';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 let updateStatusText = '';
 
@@ -59,6 +59,18 @@ function requestAutoUpdate(latestVersion, bodyEl, buttonEl, laterBtn) {
     if (laterBtn) laterBtn.disabled = false;
     if (bodyEl) bodyEl.textContent = 'The update helper is not running. Click OPEN LAUNCHER, or close this window and run launch.bat from the game folder.';
   });
+}
+
+function normalizeUpdateManifest(manifest) {
+  if (manifest && manifest.content) {
+    const decoded = atob(String(manifest.content).replace(/\s/g, ''));
+    return JSON.parse(decoded);
+  }
+  return manifest;
+}
+
+function cacheBustUrl(url, stamp) {
+  return url + (url.includes('?') ? '&' : '?') + 't=' + stamp;
 }
 
 function setUpdateStatus(text) {
@@ -113,8 +125,8 @@ function checkForUpdateBanner() {
   if (DEV_MODE || !UPDATE_MANIFEST_URL) return;
   const stamp = Date.now();
   const urls = [
-    UPDATE_MANIFEST_URL + '?t=' + stamp,
-    UPDATE_HELPER_URL + '/manifest?t=' + stamp,
+    cacheBustUrl(UPDATE_MANIFEST_URL, stamp),
+    cacheBustUrl(UPDATE_HELPER_URL + '/manifest', stamp),
   ];
 
   urls.reduce((chain, url) => {
@@ -123,6 +135,7 @@ function checkForUpdateBanner() {
         if (!res.ok) throw new Error('update check failed');
         return res.json();
       })
+      .then(normalizeUpdateManifest)
       .then(manifest => {
         if (!manifest || !manifest.version) throw new Error('missing update version');
         return manifest;

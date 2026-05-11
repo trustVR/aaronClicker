@@ -88,7 +88,12 @@ function Invoke-UpdateAndRelaunch {
 
 function Get-ManifestJson {
   try {
-    $manifest = Invoke-RestMethod -Uri ($ManifestUrl + '?t=' + [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) -UseBasicParsing
+    $separator = if ($ManifestUrl.Contains('?')) { '&' } else { '?' }
+    $manifest = Invoke-RestMethod -Uri ($ManifestUrl + $separator + 't=' + [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) -UseBasicParsing
+    if ($manifest.content) {
+      $json = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(($manifest.content -replace '\s', '')))
+      $manifest = $json | ConvertFrom-Json
+    }
     return (@{
       version = [string]$manifest.version
       zipUrl = [string]$manifest.zipUrl

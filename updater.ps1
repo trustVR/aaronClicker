@@ -44,6 +44,17 @@ function Test-NewerVersion {
   }
 }
 
+function ConvertTo-UpdateManifest {
+  param($Manifest)
+
+  if ($Manifest.content) {
+    $json = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(($Manifest.content -replace '\s', '')))
+    return $json | ConvertFrom-Json
+  }
+
+  return $Manifest
+}
+
 if ([string]::IsNullOrWhiteSpace($ManifestUrl)) {
   exit 0
 }
@@ -57,7 +68,7 @@ try {
   New-Item -ItemType Directory -Path $tempRoot, $extractRoot -Force | Out-Null
 
   Write-UpdaterStatus 'checking for updates...'
-  $manifest = Invoke-RestMethod -Uri $ManifestUrl -UseBasicParsing
+  $manifest = ConvertTo-UpdateManifest (Invoke-RestMethod -Uri $ManifestUrl -UseBasicParsing)
 
   if (-not $manifest.version -or -not $manifest.zipUrl) {
     throw 'Update manifest must contain version and zipUrl.'
