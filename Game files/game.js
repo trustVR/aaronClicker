@@ -8,7 +8,7 @@ const devTools = {
   noRoadCrashes: false,
   alwaysSafeAir: false,
 };
-const APP_VERSION = '1.2.2';
+const APP_VERSION = '1.2.3';
 const UPDATE_MANIFEST_URL = 'https://raw.githubusercontent.com/trustVR/aaronClicker/main/update-manifest.json';
 const UPDATE_HELPER_URL = 'http://127.0.0.1:18172';
 
@@ -3586,7 +3586,7 @@ updateCheatBtnVisibility();
 checkAchievements(true);
 createDevToolsPanel();
 checkForUpdateBanner();
-setInterval(checkForUpdateBanner, 60 * 1000);
+setInterval(checkForUpdateBanner, 10 * 1000);
 startFootlongMusicIfAllAchievements();
 
 // bulk buy button wiring
